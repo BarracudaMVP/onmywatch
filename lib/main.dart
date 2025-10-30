@@ -8,16 +8,17 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: const Locale('ru', 'RU'),
       supportedLocales: const [Locale('ru', 'RU')],
-      localizationsDelegates: const [
+      localizationsDelegates: [
         DefaultMaterialLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
       ],
-      title: 'Days Left App',
+      title: 'On My Watch',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -33,9 +34,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int daysLeft = 30;
-  bool showYearView = false; // false = Месяц, true = Год
   DateTime focusedDay = DateTime.now();
+  DateTime? selectedDay; // ← ВЫДЕЛЕННЫЙ ДЕНЬ
+  bool showYearView = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text('Осталось дней',
                       style: TextStyle(fontSize: 24, color: Colors.white70)),
                   const SizedBox(height: 16),
-                  Text('$daysLeft',
-                      style: const TextStyle(
+                  const Text('30',
+                      style: TextStyle(
                           fontSize: 96,
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
@@ -65,74 +66,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
           /* -------------------- НИЖНЯЯ ПОЛОВИНА -------------------- */
           Expanded(
-  child: Container(
-    width: double.infinity,
-    color: Colors.grey.shade100,
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-    child: Column(
-      children: [
-        /* ----- ГОД + ПЕРЕКЛЮЧАТЕЛЬ (в центре) ----- */
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${focusedDay.year}',
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
-            ),
-            const SizedBox(width: 16),
-            _ModeToggle(
-              isYear: showYearView,
-              onChanged: (isYear) => setState(() => showYearView = isYear),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-                  /* ----- СТРЕЛКИ + НАЗВАНИЕ МЕСЯЦА ----- */
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: showYearView
-                  ? null
-                  : () => setState(() => focusedDay = DateTime(
-                      focusedDay.year, focusedDay.month - 1)),
-              color: showYearView ? Colors.grey.shade400 : Colors.black87,
-            ),
-            Text(
-              showYearView ? '' : _getMonthName(focusedDay.month),
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: showYearView
-                  ? null
-                  : () => setState(() => focusedDay = DateTime(
-                      focusedDay.year, focusedDay.month + 1)),
-              color: showYearView ? Colors.grey.shade400 : Colors.black87,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        /* ----- КАЛЕНДАРЬ ----- */
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: showYearView
-                ? const YearCalendarView(key: ValueKey('year'))
-                : MonthCalendarView(
-                    key: const ValueKey('month'),
-                    focusedDay: focusedDay,
-                    onPageChanged: (d) => setState(() => focusedDay = d),
+            child: Container(
+              width: double.infinity,
+              color: Colors.grey.shade100,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                children: [
+                  Center(
+                    child: _ModeToggle(
+                      isYear: showYearView,
+                      onChanged: (isYear) => setState(() => showYearView = isYear),
+                    ),
                   ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: () => _changePeriod(-1),
+                        color: Colors.black87,
+                      ),
+                      Text(
+                        showYearView
+                            ? '${focusedDay.year}'
+                            : '${_getMonthName(focusedDay.month)} ${focusedDay.year}',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () => _changePeriod(1),
+                        color: Colors.black87,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: showYearView
+                          ? YearCalendarView(
+                              key: const ValueKey('year'),
+                              currentYear: focusedDay.year,
+                              selectedDay: selectedDay, // ← ПЕРЕДАЁМ!
+                              onMonthSelected: (date) {
+                                setState(() {
+                                  showYearView = false;
+                                  focusedDay = date;
+                                });
+                              },
+                            )
+                          : MonthCalendarView(
+                              key: const ValueKey('month'),
+                              focusedDay: focusedDay,
+                              selectedDay: selectedDay,
+                              onDaySelected: (day, focused) {
+                                setState(() {
+                                  selectedDay = day;
+                                  focusedDay = focused;
+                                });
+                              },
+                              onPageChanged: (d) => setState(() => focusedDay = d),
+                            ),
                     ),
                   ),
                 ],
@@ -142,6 +142,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _changePeriod(int delta) {
+    setState(() {
+      if (showYearView) {
+        focusedDay = DateTime(focusedDay.year + delta);
+      } else {
+        focusedDay = DateTime(focusedDay.year, focusedDay.month + delta);
+      }
+    });
   }
 
   String _getMonthName(int month) {
@@ -155,7 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 /* --------------------------------------------------------------------- */
-/*                     ПЕРЕКЛЮЧАТЕЛЬ М / Г (единый контур)               */
 class _ModeToggle extends StatelessWidget {
   final bool isYear;
   final ValueChanged<bool> onChanged;
@@ -165,37 +174,41 @@ class _ModeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade400, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade400, width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2)),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _toggleItem('М', !isYear),
-          _toggleItem('Г', isYear),
+          _toggleItem('М', !isYear, () => onChanged(false)),
+          _toggleItem('Г', isYear, () => onChanged(true)),
         ],
       ),
     );
   }
 
-  Widget _toggleItem(String text, bool active) {
+  Widget _toggleItem(String text, bool active, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => onChanged(active),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? Colors.blue.shade50 : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: active ? Colors.blue.shade600 : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
-            color: active ? Colors.blue.shade700 : Colors.grey.shade700,
+            fontSize: 16,
+            fontWeight: active ? FontWeight.bold : FontWeight.w600,
+            color: active ? Colors.white : Colors.grey.shade700,
           ),
         ),
       ),
@@ -204,14 +217,17 @@ class _ModeToggle extends StatelessWidget {
 }
 
 /* --------------------------------------------------------------------- */
-/*                         МЕСЯЧНЫЙ КАЛЕНДАРЬ                           */
 class MonthCalendarView extends StatelessWidget {
   final DateTime focusedDay;
+  final DateTime? selectedDay;
+  final void Function(DateTime, DateTime)? onDaySelected;
   final ValueChanged<DateTime> onPageChanged;
 
   const MonthCalendarView({
     super.key,
     required this.focusedDay,
+    this.selectedDay,
+    this.onDaySelected,
     required this.onPageChanged,
   });
 
@@ -221,33 +237,31 @@ class MonthCalendarView extends StatelessWidget {
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
       focusedDay: focusedDay,
+      selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+      onDaySelected: onDaySelected,
       startingDayOfWeek: StartingDayOfWeek.monday,
       calendarFormat: CalendarFormat.month,
       locale: 'ru_RU',
-
-      // Отключаем стандартный заголовок — он у нас сверху
       headerVisible: false,
-
-      rowHeight: 46, // чтобы 6 строк влезали
+      rowHeight: 46,
       availableGestures: AvailableGestures.horizontalSwipe,
       onPageChanged: onPageChanged,
-
       calendarStyle: CalendarStyle(
-        todayDecoration:
-            BoxDecoration(color: Colors.red.shade600, shape: BoxShape.circle),
-        todayTextStyle:
-            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        todayDecoration: BoxDecoration(color: Colors.red.shade600, shape: BoxShape.circle),
+        todayTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        selectedDecoration: BoxDecoration(
+          color: Colors.blue.shade700,
+          shape: BoxShape.circle,
+        ),
+        selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         defaultTextStyle: const TextStyle(color: Colors.black87),
         weekendTextStyle: const TextStyle(color: Colors.black87),
         outsideTextStyle: TextStyle(color: Colors.grey.shade400),
-        outsideDecoration: const BoxDecoration(shape: BoxShape.circle),
       ),
-
       daysOfWeekStyle: const DaysOfWeekStyle(
         weekdayStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
         weekendStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
       ),
-
       calendarBuilders: CalendarBuilders(
         outsideBuilder: (c, day, _) => Center(
           child: Text('${day.day}', style: TextStyle(color: Colors.grey.shade400)),
@@ -258,9 +272,18 @@ class MonthCalendarView extends StatelessWidget {
 }
 
 /* --------------------------------------------------------------------- */
-/*                         ГОДОВОЙ КАЛЕНДАРЬ                             */
+/* ГОДОВОЙ КАЛЕНДАРЬ — С ПОДСВЕТКОЙ МЕСЯЦА */
 class YearCalendarView extends StatelessWidget {
-  const YearCalendarView({super.key});
+  final int currentYear;
+  final DateTime? selectedDay; // ← НОВЫЙ ПАРАМЕТР
+  final ValueChanged<DateTime>? onMonthSelected;
+
+  const YearCalendarView({
+    super.key,
+    required this.currentYear,
+    this.selectedDay,
+    this.onMonthSelected,
+  });
 
   String _getMonthName(int m) {
     const months = [
@@ -273,7 +296,7 @@ class YearCalendarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final cur = now.month;
+    final isCurrentYear = currentYear == now.year;
 
     return GridView.builder(
       padding: const EdgeInsets.all(8),
@@ -286,22 +309,47 @@ class YearCalendarView extends StatelessWidget {
       itemCount: 12,
       itemBuilder: (_, i) {
         final m = i + 1;
-        final active = m == cur;
-        return Container(
-          decoration: BoxDecoration(
-            color: active ? Colors.red.shade50 : Colors.white,
-            border: Border.all(
-                color: active ? Colors.red.shade600 : Colors.grey.shade300,
-                width: active ? 2 : 1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              _getMonthName(m),
-              style: TextStyle(
+        final isCurrentMonth = isCurrentYear && m == now.month;
+        
+        // ← ПОДСВЕТКА: если selectedDay в этом месяце
+        final isSelectedMonth = selectedDay != null &&
+            selectedDay!.year == currentYear &&
+            selectedDay!.month == m;
+
+        return GestureDetector(
+          onTap: () => onMonthSelected?.call(DateTime(currentYear, m)),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelectedMonth
+                  ? Colors.blue.shade700  // ← СИНИЙ ФОН
+                  : isCurrentMonth
+                      ? Colors.red.shade50
+                      : Colors.white,
+              border: Border.all(
+                color: isSelectedMonth
+                    ? Colors.blue.shade700
+                    : isCurrentMonth
+                        ? Colors.red.shade600
+                        : Colors.grey.shade300,
+                width: isSelectedMonth ? 0 : (isCurrentMonth ? 2 : 1),
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                _getMonthName(m),
+                style: TextStyle(
                   fontSize: 16,
-                  fontWeight: active ? FontWeight.bold : FontWeight.w500,
-                  color: active ? Colors.red.shade700 : Colors.black87),
+                  fontWeight: isSelectedMonth || isCurrentMonth
+                      ? FontWeight.bold
+                      : FontWeight.w500,
+                  color: isSelectedMonth
+                      ? Colors.white  // ← БЕЛЫЙ ТЕКСТ
+                      : isCurrentMonth
+                          ? Colors.red.shade700
+                          : Colors.black87,
+                ),
+              ),
             ),
           ),
         );

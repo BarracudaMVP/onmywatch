@@ -1,0 +1,11 @@
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+
+  # Опционально: адаптивная иконка для Android
+  # adaptive_icon_background: "#FFFFFF"  # цвет фона
+  # adaptive_icon_foreground: "assets/icons/icon_foreground.png"  # если есть
+
+  # Для iOS — можно указать отдельно
+  # image_path_ios: "assets/icons/icon_ios.png"
