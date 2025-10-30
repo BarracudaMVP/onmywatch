@@ -35,7 +35,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   DateTime focusedDay = DateTime.now();
-  DateTime? selectedDay; // ← ВЫДЕЛЕННЫЙ ДЕНЬ
+  DateTime? selectedDay;
   bool showYearView = false;
 
   @override
@@ -113,9 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? YearCalendarView(
                               key: const ValueKey('year'),
                               currentYear: focusedDay.year,
-                              selectedDay: selectedDay, // ← ПЕРЕДАЁМ!
+                              selectedDay: selectedDay,
                               onMonthSelected: (date) {
                                 setState(() {
+                                  // ← КЛИК ПО МЕСЯЦУ: 1-е число
+                                  selectedDay = DateTime(date.year, date.month, 1);
                                   showYearView = false;
                                   focusedDay = date;
                                 });
@@ -131,7 +133,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   focusedDay = focused;
                                 });
                               },
-                              onPageChanged: (d) => setState(() => focusedDay = d),
+                              onPageChanged: (d) {
+                                setState(() {
+                                  focusedDay = d;
+                                  // ← СМЕНА МЕСЯЦА: 1-е число
+                                  selectedDay = DateTime(d.year, d.month, 1);
+                                });
+                              },
                             ),
                     ),
                   ),
@@ -150,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
         focusedDay = DateTime(focusedDay.year + delta);
       } else {
         focusedDay = DateTime(focusedDay.year, focusedDay.month + delta);
+        // ← СМЕНА СТРЕЛКАМИ: 1-е число
+        selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
       }
     });
   }
@@ -233,6 +243,9 @@ class MonthCalendarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final isTodaySelected = isSameDay(selectedDay, today);
+
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
@@ -249,10 +262,7 @@ class MonthCalendarView extends StatelessWidget {
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(color: Colors.red.shade600, shape: BoxShape.circle),
         todayTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        selectedDecoration: BoxDecoration(
-          color: Colors.blue.shade700,
-          shape: BoxShape.circle,
-        ),
+        selectedDecoration: BoxDecoration(color: Colors.blue.shade700, shape: BoxShape.circle),
         selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         defaultTextStyle: const TextStyle(color: Colors.black87),
         weekendTextStyle: const TextStyle(color: Colors.black87),
@@ -263,6 +273,29 @@ class MonthCalendarView extends StatelessWidget {
         weekendStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
       ),
       calendarBuilders: CalendarBuilders(
+        // ← СПЕЦИАЛЬНАЯ ПОДСВЕТКА: Сегодня + Выбран
+        selectedBuilder: (context, day, focusedDay) {
+          if (isSameDay(day, today)) {
+            return Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.red.shade600,
+                  border: Border.all(color: Colors.blue.shade700, width: 3),
+                ),
+                child: Center(
+                  child: Text(
+                    '${day.day}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            );
+          }
+          return null;
+        },
         outsideBuilder: (c, day, _) => Center(
           child: Text('${day.day}', style: TextStyle(color: Colors.grey.shade400)),
         ),
@@ -272,10 +305,9 @@ class MonthCalendarView extends StatelessWidget {
 }
 
 /* --------------------------------------------------------------------- */
-/* ГОДОВОЙ КАЛЕНДАРЬ — С ПОДСВЕТКОЙ МЕСЯЦА */
 class YearCalendarView extends StatelessWidget {
   final int currentYear;
-  final DateTime? selectedDay; // ← НОВЫЙ ПАРАМЕТР
+  final DateTime? selectedDay;
   final ValueChanged<DateTime>? onMonthSelected;
 
   const YearCalendarView({
@@ -297,6 +329,7 @@ class YearCalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final isCurrentYear = currentYear == now.year;
+    final currentMonth = now.month;
 
     return GridView.builder(
       padding: const EdgeInsets.all(8),
@@ -309,29 +342,32 @@ class YearCalendarView extends StatelessWidget {
       itemCount: 12,
       itemBuilder: (_, i) {
         final m = i + 1;
-        final isCurrentMonth = isCurrentYear && m == now.month;
-        
-        // ← ПОДСВЕТКА: если selectedDay в этом месяце
-        final isSelectedMonth = selectedDay != null &&
-            selectedDay!.year == currentYear &&
-            selectedDay!.month == m;
+        final isCurrentMonth = isCurrentYear && m == currentMonth;
+        final isSelectedMonth = selectedDay != null && selectedDay!.year == currentYear && selectedDay!.month == m;
+
+        // ← СПЕЦИАЛЬНЫЙ СЛУЧАЙ: Текущий месяц + Выбран
+        final isTodayAndSelected = isCurrentMonth && isSelectedMonth;
 
         return GestureDetector(
           onTap: () => onMonthSelected?.call(DateTime(currentYear, m)),
           child: Container(
             decoration: BoxDecoration(
-              color: isSelectedMonth
-                  ? Colors.blue.shade700  // ← СИНИЙ ФОН
-                  : isCurrentMonth
-                      ? Colors.red.shade50
-                      : Colors.white,
+              color: isTodayAndSelected
+                  ? Colors.red.shade100
+                  : isSelectedMonth
+                      ? Colors.blue.shade700
+                      : isCurrentMonth
+                          ? Colors.red.shade50
+                          : Colors.white,
               border: Border.all(
-                color: isSelectedMonth
+                color: isTodayAndSelected
                     ? Colors.blue.shade700
-                    : isCurrentMonth
-                        ? Colors.red.shade600
-                        : Colors.grey.shade300,
-                width: isSelectedMonth ? 0 : (isCurrentMonth ? 2 : 1),
+                    : isSelectedMonth
+                        ? Colors.blue.shade700
+                        : isCurrentMonth
+                            ? Colors.red.shade600
+                            : Colors.grey.shade300,
+                width: isTodayAndSelected || isSelectedMonth ? 2 : (isCurrentMonth ? 2 : 1),
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -340,14 +376,14 @@ class YearCalendarView extends StatelessWidget {
                 _getMonthName(m),
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: isSelectedMonth || isCurrentMonth
-                      ? FontWeight.bold
-                      : FontWeight.w500,
-                  color: isSelectedMonth
-                      ? Colors.white  // ← БЕЛЫЙ ТЕКСТ
-                      : isCurrentMonth
-                          ? Colors.red.shade700
-                          : Colors.black87,
+                  fontWeight: (isSelectedMonth || isCurrentMonth) ? FontWeight.bold : FontWeight.w500,
+                  color: isTodayAndSelected
+                      ? Colors.blue.shade700
+                      : isSelectedMonth
+                          ? Colors.white
+                          : isCurrentMonth
+                              ? Colors.red.shade700
+                              : Colors.black87,
                 ),
               ),
             ),
