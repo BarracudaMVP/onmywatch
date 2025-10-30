@@ -40,6 +40,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final isSelectedInCurrentMonth = selectedDay != null &&
+        selectedDay!.year == today.year &&
+        selectedDay!.month == today.month;
+
     return Scaffold(
       body: Column(
         children: [
@@ -72,10 +77,32 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Column(
                 children: [
-                  Center(
-                    child: _ModeToggle(
-                      isYear: showYearView,
-                      onChanged: (isYear) => setState(() => showYearView = isYear),
+                  // ← ПЕРЕКЛЮЧАТЕЛЬ + КНОПКА ВОЗВРАТА
+                  SizedBox(
+                    height: 48,
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: _ModeToggle(
+                            isYear: showYearView,
+                            onChanged: (isYear) => setState(() => showYearView = isYear),
+                          ),
+                        ),
+                        if (!isSelectedInCurrentMonth && selectedDay != null)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: _BackToTodayButton(
+                              onTap: () {
+                                setState(() {
+                                  // ← ВОЗВРАТ К СЕГОДНЯШНЕЙ ДАТЕ
+                                  selectedDay = today;
+                                  focusedDay = today;
+                                  showYearView = false;
+                                });
+                              },
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -106,17 +133,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 8),
 
+                  // ← ПЛАВНЫЙ ПЕРЕХОД МЕЖДУ КАЛЕНДАРЯМИ
                   Expanded(
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 400),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
                       child: showYearView
                           ? YearCalendarView(
-                              key: const ValueKey('year'),
+                              key: ValueKey('year_${focusedDay.year}'),
                               currentYear: focusedDay.year,
                               selectedDay: selectedDay,
                               onMonthSelected: (date) {
                                 setState(() {
-                                  // ← КЛИК ПО МЕСЯЦУ: 1-е число
                                   selectedDay = DateTime(date.year, date.month, 1);
                                   showYearView = false;
                                   focusedDay = date;
@@ -124,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             )
                           : MonthCalendarView(
-                              key: const ValueKey('month'),
+                              key: ValueKey('month_${focusedDay.year}_${focusedDay.month}'),
                               focusedDay: focusedDay,
                               selectedDay: selectedDay,
                               onDaySelected: (day, focused) {
@@ -136,7 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPageChanged: (d) {
                                 setState(() {
                                   focusedDay = d;
-                                  // ← СМЕНА МЕСЯЦА: 1-е число
                                   selectedDay = DateTime(d.year, d.month, 1);
                                 });
                               },
@@ -158,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
         focusedDay = DateTime(focusedDay.year + delta);
       } else {
         focusedDay = DateTime(focusedDay.year, focusedDay.month + delta);
-        // ← СМЕНА СТРЕЛКАМИ: 1-е число
         selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
       }
     });
@@ -227,6 +263,32 @@ class _ModeToggle extends StatelessWidget {
 }
 
 /* --------------------------------------------------------------------- */
+class _BackToTodayButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _BackToTodayButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade400, width: 1.5),
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: const Icon(Icons.refresh, size: 20, color: Colors.blue),
+      ),
+    );
+  }
+}
+
+/* --------------------------------------------------------------------- */
 class MonthCalendarView extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime? selectedDay;
@@ -244,7 +306,6 @@ class MonthCalendarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final isTodaySelected = isSameDay(selectedDay, today);
 
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
@@ -273,7 +334,6 @@ class MonthCalendarView extends StatelessWidget {
         weekendStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
       ),
       calendarBuilders: CalendarBuilders(
-        // ← СПЕЦИАЛЬНАЯ ПОДСВЕТКА: Сегодня + Выбран
         selectedBuilder: (context, day, focusedDay) {
           if (isSameDay(day, today)) {
             return Center(
@@ -344,8 +404,6 @@ class YearCalendarView extends StatelessWidget {
         final m = i + 1;
         final isCurrentMonth = isCurrentYear && m == currentMonth;
         final isSelectedMonth = selectedDay != null && selectedDay!.year == currentYear && selectedDay!.month == m;
-
-        // ← СПЕЦИАЛЬНЫЙ СЛУЧАЙ: Текущий месяц + Выбран
         final isTodayAndSelected = isCurrentMonth && isSelectedMonth;
 
         return GestureDetector(
