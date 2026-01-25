@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../config/app_theme.dart';
 
 class BackToTodayButton extends StatelessWidget {
   final VoidCallback onTap;
+  
   const BackToTodayButton({super.key, required this.onTap});
 
   @override
@@ -9,17 +11,25 @@ class BackToTodayButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: AppDimensions.iconButtonSize,
+        height: AppDimensions.iconButtonSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.shade400, width: 1.5),
-          boxShadow: [
-            BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2)),
+          color: AppColors.white,
+          border: Border.all(color: AppColors.borderGrey, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
-        child: const Icon(Icons.refresh, size: 20, color: Colors.blue),
+        child: Icon(
+          Icons.refresh,
+          size: AppDimensions.smallIconSize,
+          color: Colors.blue,
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../config/app_theme.dart';
 
 class MonthCalendarView extends StatelessWidget {
   final DateTime focusedDay;
@@ -17,8 +18,6 @@ class MonthCalendarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
-
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
@@ -29,48 +28,86 @@ class MonthCalendarView extends StatelessWidget {
       calendarFormat: CalendarFormat.month,
       locale: 'ru_RU',
       headerVisible: false,
-      rowHeight: 46,
+      rowHeight: AppDimensions.calendarRowHeight,
       availableGestures: AvailableGestures.horizontalSwipe,
       onPageChanged: onPageChanged,
       calendarStyle: CalendarStyle(
-        todayDecoration: BoxDecoration(color: Colors.red.shade600, shape: BoxShape.circle),
-        todayTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        selectedDecoration: BoxDecoration(color: Colors.blue.shade700, shape: BoxShape.circle),
-        selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        defaultTextStyle: const TextStyle(color: Colors.black87),
-        weekendTextStyle: const TextStyle(color: Colors.black87),
-        outsideTextStyle: TextStyle(color: Colors.grey.shade400),
+        todayDecoration: BoxDecoration(
+          color: AppColors.todayRed,
+          shape: BoxShape.circle,
+        ),
+        todayTextStyle: TextStyle(
+          color: AppColors.white,
+          fontWeight: FontWeight.bold,
+        ),
+        selectedDecoration: BoxDecoration(
+          color: AppColors.selectedBlue,
+          shape: BoxShape.circle,
+        ),
+        selectedTextStyle: TextStyle(
+          color: AppColors.white,
+          fontWeight: FontWeight.bold,
+        ),
+        defaultTextStyle: TextStyle(color: AppColors.black87),
+        weekendTextStyle: TextStyle(color: AppColors.black87),
+        outsideTextStyle: TextStyle(color: AppColors.lightTextGrey),
       ),
-      daysOfWeekStyle: const DaysOfWeekStyle(
-        weekdayStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
-        weekendStyle: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.black87,
+        ),
+        weekendStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.black87,
+        ),
       ),
       calendarBuilders: CalendarBuilders(
-        selectedBuilder: (context, day, focusedDay) {
-          if (isSameDay(day, today)) {
-            return Center(
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.red.shade600,
-                  border: Border.all(color: Colors.blue.shade700, width: 3),
-                ),
-                child: Center(
-                  child: Text(
-                    '${day.day}',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            );
-          }
-          return null;
-        },
-        outsideBuilder: (c, day, _) => Center(
-          child: Text('${day.day}', style: TextStyle(color: Colors.grey.shade400)),
+        selectedBuilder: _buildSelectedDay,
+        outsideBuilder: _buildOutsideDay,
+      ),
+    );
+  }
+
+  Widget? _buildSelectedDay(
+    BuildContext context,
+    DateTime day,
+    DateTime focusedDay,
+  ) {
+    final today = DateTime.now();
+    if (!isSameDay(day, today)) return null;
+
+    return Center(
+      child: Container(
+        width: AppDimensions.calendarCellSize,
+        height: AppDimensions.calendarCellSize,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.todayRed,
+          border: Border.all(color: AppColors.selectedBlue, width: 3),
         ),
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: TextStyle(
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOutsideDay(
+    BuildContext context,
+    DateTime day,
+    DateTime focusedDay,
+  ) {
+    return Center(
+      child: Text(
+        '${day.day}',
+        style: TextStyle(color: AppColors.lightTextGrey),
       ),
     );
   }

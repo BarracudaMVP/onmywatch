@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/home_screen.dart';
+import 'config/app_theme.dart';
 
 void main() {
   initializeDateFormatting('ru_RU', null).then((_) => runApp(const MyApp()));
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         DefaultWidgetsLocalizations.delegate,
       ],
       title: 'On My Watch',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: AppTheme.lightTheme,
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
     );

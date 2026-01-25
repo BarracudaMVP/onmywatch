@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../config/app_theme.dart';
+import '../utils/date_utils.dart';
 
 class YearCalendarView extends StatelessWidget {
   final int currentYear;
@@ -12,77 +14,104 @@ class YearCalendarView extends StatelessWidget {
     this.onMonthSelected,
   });
 
-  String _getMonthName(int m) {
-    const months = [
-      'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-    ];
-    return months[m - 1];
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(AppDimensions.paddingSmall),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: AppDimensions.gridCrossAxisCount,
+        childAspectRatio: AppDimensions.gridAspectRatio,
+        crossAxisSpacing: AppDimensions.gridSpacing,
+        mainAxisSpacing: AppDimensions.gridSpacing,
+      ),
+      itemCount: 12,
+      itemBuilder: (context, index) => _MonthCell(
+        month: index + 1,
+        year: currentYear,
+        selectedDay: selectedDay,
+        onTap: () => onMonthSelected?.call(DateTime(currentYear, index + 1)),
+      ),
+    );
+  }
+}
+
+class _MonthCell extends StatelessWidget {
+  final int month;
+  final int year;
+  final DateTime? selectedDay;
+  final VoidCallback onTap;
+
+  const _MonthCell({
+    required this.month,
+    required this.year,
+    required this.selectedDay,
+    required this.onTap,
+  });
+
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return year == now.year && month == now.month;
+  }
+
+  bool get _isSelectedMonth {
+    return selectedDay != null &&
+        selectedDay!.year == year &&
+        selectedDay!.month == month;
+  }
+
+  bool get _isTodayAndSelected => _isCurrentMonth && _isSelectedMonth;
+
+  Color get _backgroundColor {
+    if (_isTodayAndSelected) return AppColors.lightRedAccent;
+    if (_isSelectedMonth) return AppColors.selectedBlue;
+    if (_isCurrentMonth) return AppColors.lightRed;
+    return AppColors.white;
+  }
+
+  Color get _borderColor {
+    if (_isTodayAndSelected || _isSelectedMonth) return AppColors.selectedBlue;
+    if (_isCurrentMonth) return AppColors.todayRed;
+    return AppColors.lightBorderGrey;
+  }
+
+  double get _borderWidth {
+    return (_isTodayAndSelected || _isSelectedMonth || _isCurrentMonth) ? 2 : 1;
+  }
+
+  Color get _textColor {
+    if (_isTodayAndSelected) return AppColors.selectedBlue;
+    if (_isSelectedMonth) return AppColors.white;
+    if (_isCurrentMonth) return AppColors.darkRed;
+    return AppColors.black87;
+  }
+
+  FontWeight get _fontWeight {
+    return (_isSelectedMonth || _isCurrentMonth)
+        ? FontWeight.bold
+        : FontWeight.w500;
   }
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final isCurrentYear = currentYear == now.year;
-    final currentMonth = now.month;
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.8,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: 12,
-      itemBuilder: (_, i) {
-        final m = i + 1;
-        final isCurrentMonth = isCurrentYear && m == currentMonth;
-        final isSelectedMonth = selectedDay != null && selectedDay!.year == currentYear && selectedDay!.month == m;
-        final isTodayAndSelected = isCurrentMonth && isSelectedMonth;
-
-        return GestureDetector(
-          onTap: () => onMonthSelected?.call(DateTime(currentYear, m)),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isTodayAndSelected
-                  ? Colors.red.shade100
-                  : isSelectedMonth
-                      ? Colors.blue.shade700
-                      : isCurrentMonth
-                          ? Colors.red.shade50
-                          : Colors.white,
-              border: Border.all(
-                color: isTodayAndSelected
-                    ? Colors.blue.shade700
-                    : isSelectedMonth
-                        ? Colors.blue.shade700
-                        : isCurrentMonth
-                            ? Colors.red.shade600
-                            : Colors.grey.shade300,
-                width: isTodayAndSelected || isSelectedMonth ? 2 : (isCurrentMonth ? 2 : 1),
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                _getMonthName(m),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: (isSelectedMonth || isCurrentMonth) ? FontWeight.bold : FontWeight.w500,
-                  color: isTodayAndSelected
-                      ? Colors.blue.shade700
-                      : isSelectedMonth
-                          ? Colors.white
-                          : isCurrentMonth
-                              ? Colors.red.shade700
-                              : Colors.black87,
-                ),
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _backgroundColor,
+          border: Border.all(color: _borderColor, width: _borderWidth),
+          borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        ),
+        child: Center(
+          child: Text(
+            AppDateUtils.getMonthName(month),
+            style: TextStyle(
+              fontSize: AppDimensions.bodyFontSize,
+              fontWeight: _fontWeight,
+              color: _textColor,
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
