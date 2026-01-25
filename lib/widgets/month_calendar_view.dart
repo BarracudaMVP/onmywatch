@@ -7,6 +7,7 @@ class MonthCalendarView extends StatelessWidget {
   final DateTime? selectedDay;
   final void Function(DateTime, DateTime)? onDaySelected;
   final ValueChanged<DateTime> onPageChanged;
+  final AppColors colors;
 
   const MonthCalendarView({
     super.key,
@@ -14,6 +15,7 @@ class MonthCalendarView extends StatelessWidget {
     this.selectedDay,
     this.onDaySelected,
     required this.onPageChanged,
+    required this.colors,
   });
 
   @override
@@ -33,7 +35,7 @@ class MonthCalendarView extends StatelessWidget {
       onPageChanged: onPageChanged,
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(
-          color: AppColors.todayRed,
+          color: colors.accentColor,
           shape: BoxShape.circle,
         ),
         todayTextStyle: TextStyle(
@@ -41,7 +43,7 @@ class MonthCalendarView extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
         selectedDecoration: BoxDecoration(
-          color: AppColors.selectedBlue,
+          color: colors.primaryColor,
           shape: BoxShape.circle,
         ),
         selectedTextStyle: TextStyle(
@@ -63,17 +65,13 @@ class MonthCalendarView extends StatelessWidget {
         ),
       ),
       calendarBuilders: CalendarBuilders(
-        selectedBuilder: _buildSelectedDay,
-        outsideBuilder: _buildOutsideDay,
+        selectedBuilder: (context, day, focusedDay) => _buildSelectedDay(context, day, focusedDay),
+        outsideBuilder: (context, day, focusedDay) => _buildOutsideDay(context, day, focusedDay),
       ),
     );
   }
 
-  Widget? _buildSelectedDay(
-    BuildContext context,
-    DateTime day,
-    DateTime focusedDay,
-  ) {
+  Widget? _buildSelectedDay(BuildContext context, DateTime day, DateTime focusedDay) {
     final today = DateTime.now();
     if (!isSameDay(day, today)) return null;
 
@@ -83,8 +81,8 @@ class MonthCalendarView extends StatelessWidget {
         height: AppDimensions.calendarCellSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.todayRed,
-          border: Border.all(color: AppColors.selectedBlue, width: 3),
+          color: colors.accentColor,
+          border: Border.all(color: colors.primaryColor, width: 3),
         ),
         child: Center(
           child: Text(
@@ -99,11 +97,7 @@ class MonthCalendarView extends StatelessWidget {
     );
   }
 
-  Widget _buildOutsideDay(
-    BuildContext context,
-    DateTime day,
-    DateTime focusedDay,
-  ) {
+  Widget _buildOutsideDay(BuildContext context, DateTime day, DateTime focusedDay) {
     return Center(
       child: Text(
         '${day.day}',

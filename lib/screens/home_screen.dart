@@ -7,9 +7,18 @@ import '../widgets/days_counter_header.dart';
 import '../widgets/calendar_navigation_header.dart';
 import '../config/app_theme.dart';
 import '../utils/date_utils.dart';
+import '../models/app_settings.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final AppSettings settings;
+  final ValueChanged<AppSettings> onSettingsChanged;
+
+  const HomeScreen({
+    super.key,
+    required this.settings,
+    required this.onSettingsChanged,
+  });
   
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _focusedDay = DateTime.now();
   }
 
+  AppColors get _colors => AppColors(widget.settings);
+
   DateTime get _today => DateTime.now();
   
   bool get _isSelectedInCurrentMonth => 
@@ -36,7 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Column(
         children: [
-          const Expanded(child: DaysCounterHeader()),
+          Expanded(
+            child: DaysCounterHeader(colors: _colors),
+          ),
           Expanded(child: _buildCalendarSection()),
         ],
       ),
@@ -79,13 +92,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ModeToggle(
               isYear: _showYearView,
               onChanged: (isYear) => setState(() => _showYearView = isYear),
+              colors: _colors,
             ),
           ),
           if (!_isSelectedInCurrentMonth && _selectedDay != null)
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.centerLeft,
               child: BackToTodayButton(onTap: _resetToToday),
             ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: _openSettings,
+              color: AppColors.black87,
+            ),
+          ),
         ],
       ),
     );
@@ -119,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
       currentYear: _focusedDay.year,
       selectedDay: _selectedDay,
       onMonthSelected: _handleMonthSelection,
+      colors: _colors,
     );
   }
 
@@ -129,7 +152,21 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedDay: _selectedDay,
       onDaySelected: _handleDaySelection,
       onPageChanged: _handlePageChange,
+      colors: _colors,
     );
+  }
+
+  void _openSettings() async {
+    final newSettings = await Navigator.push<AppSettings>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SettingsScreen(settings: widget.settings),
+      ),
+    );
+
+    if (newSettings != null) {
+      widget.onSettingsChanged(newSettings);
+    }
   }
 
   void _handleMonthSelection(DateTime date) {

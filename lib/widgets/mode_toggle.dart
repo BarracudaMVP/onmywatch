@@ -4,11 +4,13 @@ import '../config/app_theme.dart';
 class ModeToggle extends StatelessWidget {
   final bool isYear;
   final ValueChanged<bool> onChanged;
+  final AppColors colors;
 
   const ModeToggle({
     super.key,
     required this.isYear,
     required this.onChanged,
+    required this.colors,
   });
 
   @override
@@ -34,11 +36,13 @@ class ModeToggle extends StatelessWidget {
             text: AppConstants.monthToggleLabel,
             isActive: !isYear,
             onTap: () => onChanged(false),
+            activeColor: colors.primaryColor,
           ),
           _ToggleItem(
             text: AppConstants.yearToggleLabel,
             isActive: isYear,
             onTap: () => onChanged(true),
+            activeColor: colors.primaryColor,
           ),
         ],
       ),
@@ -50,11 +54,13 @@ class _ToggleItem extends StatelessWidget {
   final String text;
   final bool isActive;
   final VoidCallback onTap;
+  final Color activeColor;
 
   const _ToggleItem({
     required this.text,
     required this.isActive,
     required this.onTap,
+    required this.activeColor,
   });
 
   @override
@@ -65,7 +71,7 @@ class _ToggleItem extends StatelessWidget {
         duration: AppConstants.toggleDuration,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primaryBlue : Colors.transparent,
+          color: isActive ? activeColor : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(

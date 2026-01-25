@@ -3,17 +3,19 @@ import '../config/app_theme.dart';
 
 class DaysCounterHeader extends StatelessWidget {
   final int daysLeft;
+  final AppColors colors;
   
   const DaysCounterHeader({
     super.key,
     this.daysLeft = 30,
+    required this.colors,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.primaryBlue,
+      color: colors.primaryColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

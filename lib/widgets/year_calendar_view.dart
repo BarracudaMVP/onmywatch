@@ -6,12 +6,14 @@ class YearCalendarView extends StatelessWidget {
   final int currentYear;
   final DateTime? selectedDay;
   final ValueChanged<DateTime>? onMonthSelected;
+  final AppColors colors;
 
   const YearCalendarView({
     super.key,
     required this.currentYear,
     this.selectedDay,
     this.onMonthSelected,
+    required this.colors,
   });
 
   @override
@@ -30,6 +32,7 @@ class YearCalendarView extends StatelessWidget {
         year: currentYear,
         selectedDay: selectedDay,
         onTap: () => onMonthSelected?.call(DateTime(currentYear, index + 1)),
+        colors: colors,
       ),
     );
   }
@@ -40,12 +43,14 @@ class _MonthCell extends StatelessWidget {
   final int year;
   final DateTime? selectedDay;
   final VoidCallback onTap;
+  final AppColors colors;
 
   const _MonthCell({
     required this.month,
     required this.year,
     required this.selectedDay,
     required this.onTap,
+    required this.colors,
   });
 
   bool get _isCurrentMonth {
@@ -62,15 +67,15 @@ class _MonthCell extends StatelessWidget {
   bool get _isTodayAndSelected => _isCurrentMonth && _isSelectedMonth;
 
   Color get _backgroundColor {
-    if (_isTodayAndSelected) return AppColors.lightRedAccent;
-    if (_isSelectedMonth) return AppColors.selectedBlue;
-    if (_isCurrentMonth) return AppColors.lightRed;
+    if (_isTodayAndSelected) return colors.accentLightAccent;
+    if (_isSelectedMonth) return colors.primaryColor;
+    if (_isCurrentMonth) return colors.accentLight;
     return AppColors.white;
   }
 
   Color get _borderColor {
-    if (_isTodayAndSelected || _isSelectedMonth) return AppColors.selectedBlue;
-    if (_isCurrentMonth) return AppColors.todayRed;
+    if (_isTodayAndSelected || _isSelectedMonth) return colors.primaryColor;
+    if (_isCurrentMonth) return colors.accentColor;
     return AppColors.lightBorderGrey;
   }
 
@@ -79,9 +84,9 @@ class _MonthCell extends StatelessWidget {
   }
 
   Color get _textColor {
-    if (_isTodayAndSelected) return AppColors.selectedBlue;
+    if (_isTodayAndSelected) return colors.primaryColor;
     if (_isSelectedMonth) return AppColors.white;
-    if (_isCurrentMonth) return AppColors.darkRed;
+    if (_isCurrentMonth) return colors.accentDark;
     return AppColors.black87;
   }
 
