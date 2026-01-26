@@ -7,21 +7,25 @@ class SettingsService {
   
   // Сохранение настроек
   Future<void> saveSettings(AppSettings settings) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = jsonEncode(settings.toJson());
-    await prefs.setString(_settingsKey, jsonString);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = jsonEncode(settings.toJson());
+      await prefs.setString(_settingsKey, jsonString);
+    } catch (e) {
+      // Игнорируем ошибки
+    }
   }
 
   // Загрузка настроек
   Future<AppSettings> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_settingsKey);
-    
-    if (jsonString == null) {
-      return AppSettings.defaults();
-    }
-    
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_settingsKey);
+      
+      if (jsonString == null || jsonString.isEmpty) {
+        return AppSettings.defaults();
+      }
+      
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       return AppSettings.fromJson(json);
     } catch (e) {
@@ -31,7 +35,11 @@ class SettingsService {
 
   // Сброс настроек
   Future<void> resetSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_settingsKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_settingsKey);
+    } catch (e) {
+      // Игнорируем ошибки
+    }
   }
 }

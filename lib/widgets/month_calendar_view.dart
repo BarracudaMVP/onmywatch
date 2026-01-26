@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../config/app_theme.dart';
+import '../models/app_settings.dart';
+import '../utils/date_utils.dart' as app_date_utils;
 
 class MonthCalendarView extends StatelessWidget {
   final DateTime focusedDay;
@@ -8,6 +10,7 @@ class MonthCalendarView extends StatelessWidget {
   final void Function(DateTime, DateTime)? onDaySelected;
   final ValueChanged<DateTime> onPageChanged;
   final AppColors colors;
+  final AppSettings settings;
 
   const MonthCalendarView({
     super.key,
@@ -16,6 +19,7 @@ class MonthCalendarView extends StatelessWidget {
     this.onDaySelected,
     required this.onPageChanged,
     required this.colors,
+    required this.settings,
   });
 
   @override
@@ -65,15 +69,48 @@ class MonthCalendarView extends StatelessWidget {
         ),
       ),
       calendarBuilders: CalendarBuilders(
+        defaultBuilder: (context, day, focusedDay) => _buildDay(context, day, false),
         selectedBuilder: (context, day, focusedDay) => _buildSelectedDay(context, day, focusedDay),
+        todayBuilder: (context, day, focusedDay) => _buildDay(context, day, true),
         outsideBuilder: (context, day, focusedDay) => _buildOutsideDay(context, day, focusedDay),
+      ),
+    );
+  }
+
+  Widget _buildDay(BuildContext context, DateTime day, bool isToday) {
+    final isWorkDay = app_date_utils.AppDateUtils.isWorkingDay(day, settings);
+    
+    return Center(
+      child: Container(
+        width: AppDimensions.calendarCellSize,
+        height: AppDimensions.calendarCellSize,
+        decoration: isToday
+            ? BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.accentColor,
+              )
+            : null,
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: TextStyle(
+              color: isToday
+                  ? AppColors.white
+                  : (isWorkDay ? Colors.grey.shade700 : colors.accentColor),
+              fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget? _buildSelectedDay(BuildContext context, DateTime day, DateTime focusedDay) {
     final today = DateTime.now();
-    if (!isSameDay(day, today)) return null;
+    final isToday = isSameDay(day, today);
+    final isWorkDay = app_date_utils.AppDateUtils.isWorkingDay(day, settings);
+    
+    if (!isToday) return null;
 
     return Center(
       child: Container(

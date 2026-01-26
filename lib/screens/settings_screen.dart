@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
-import '../config/app_theme.dart';
 import '../widgets/settings/settings_group.dart';
 import '../widgets/settings/color_picker_setting.dart';
+import '../widgets/settings/work_schedule_selector.dart';
 
 class SettingsScreen extends StatefulWidget {
   final AppSettings settings;
@@ -34,57 +34,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  void _updateSettings(AppSettings settings) {
+    setState(() {
+      _currentSettings = settings;
+    });
+  }
+
   void _resetToDefaults() {
     setState(() {
       _currentSettings = AppSettings.defaults();
     });
   }
 
+  void _saveAndExit() {
+    Navigator.pop(context, _currentSettings);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, _currentSettings);
-            },
-            child: const Text(
-              'Готово',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, null);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Настройки'),
+          backgroundColor: _currentSettings.primaryColor,
+          foregroundColor: Colors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _saveAndExit,
+              tooltip: 'Сохранить',
             ),
-          ),
-        ],
-      ),
-      body: ListView(
-        children: [
-          SettingsGroup(
-            title: 'Визуал и цвета',
+          ],
+        ),
+        body: Container(
+          color: _currentSettings.secondaryColor,
+          child: ListView(
             children: [
-              ColorPickerSetting(
-                title: 'Основной цвет',
-                subtitle: 'Цвет верхней панели и элементов интерфейса',
-                currentColor: _currentSettings.primaryColor,
-                onColorChanged: _updatePrimaryColor,
+              SettingsGroup(
+                title: 'Визуал и цвета',
+                children: [
+                  ColorPickerSetting(
+                    title: 'Основной цвет',
+                    subtitle: 'Цвет верхней панели и элементов интерфейса',
+                    currentColor: _currentSettings.primaryColor,
+                    onColorChanged: _updatePrimaryColor,
+                  ),
+                  ColorPickerSetting(
+                    title: 'Второстепенный цвет',
+                    subtitle: 'Цвет фона нижней половины экрана',
+                    currentColor: _currentSettings.secondaryColor,
+                    onColorChanged: _updateSecondaryColor,
+                  ),
+                ],
               ),
-              ColorPickerSetting(
-                title: 'Второстепенный цвет',
-                subtitle: 'Цвет фона элементов управления',
-                currentColor: _currentSettings.secondaryColor,
-                onColorChanged: _updateSecondaryColor,
+              SettingsGroup(
+                title: 'Настройки календаря',
+                children: [
+                  WorkScheduleSelector(
+                    settings: _currentSettings,
+                    onSettingsChanged: _updateSettings,
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: OutlinedButton(
+                  onPressed: _resetToDefaults,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _currentSettings.primaryColor,
+                    side: BorderSide(color: _currentSettings.primaryColor),
+                  ),
+                  child: const Text('Сбросить настройки'),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton(
-              onPressed: _resetToDefaults,
-              child: const Text('Сбросить настройки'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -30,6 +30,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadSettings() async {
     final settings = await _settingsService.loadSettings();
+    
     if (mounted) {
       setState(() {
         _settings = settings;
@@ -38,21 +39,31 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _updateSettings(AppSettings settings) {
+  Future<void> _updateSettings(AppSettings settings) async {
     if (mounted) {
       setState(() {
         _settings = settings;
       });
     }
-    _settingsService.saveSettings(settings);
+    
+    await _settingsService.saveSettings(settings);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const MaterialApp(
+      return MaterialApp(
         home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Загрузка...'),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -71,7 +82,7 @@ class _MyAppState extends State<MyApp> {
       title: 'On My Watch',
       theme: AppTheme.lightTheme(_settings),
       home: HomeScreen(
-        key: ValueKey(_settings), // Добавили key для обновления при изменении настроек
+        key: ValueKey('home_${_settings.primaryColor.value}_${_settings.secondaryColor.value}'),
         settings: _settings,
         onSettingsChanged: _updateSettings,
       ),

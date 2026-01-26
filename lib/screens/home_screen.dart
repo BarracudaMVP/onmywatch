@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCalendarSection() {
     return Container(
       width: double.infinity,
-      color: AppColors.backgroundGrey,
+      color: _colors.secondaryColor,
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.paddingMedium,
         AppDimensions.paddingSmall,
@@ -147,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedDay: _selectedDay,
       onMonthSelected: _handleMonthSelection,
       colors: _colors,
+      settings: widget.settings,
     );
   }
 
@@ -158,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onDaySelected: _handleDaySelection,
       onPageChanged: _handlePageChange,
       colors: _colors,
+      settings: widget.settings,
     );
   }
 

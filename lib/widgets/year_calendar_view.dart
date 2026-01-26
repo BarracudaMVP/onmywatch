@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
-import '../utils/date_utils.dart';
+import '../models/app_settings.dart';
+import '../utils/date_utils.dart' as app_date_utils;
 
 class YearCalendarView extends StatelessWidget {
   final int currentYear;
   final DateTime? selectedDay;
   final ValueChanged<DateTime>? onMonthSelected;
   final AppColors colors;
+  final AppSettings settings;
 
   const YearCalendarView({
     super.key,
@@ -14,6 +16,7 @@ class YearCalendarView extends StatelessWidget {
     this.selectedDay,
     this.onMonthSelected,
     required this.colors,
+    required this.settings,
   });
 
   @override
@@ -33,6 +36,7 @@ class YearCalendarView extends StatelessWidget {
         selectedDay: selectedDay,
         onTap: () => onMonthSelected?.call(DateTime(currentYear, index + 1)),
         colors: colors,
+        settings: settings,
       ),
     );
   }
@@ -44,6 +48,7 @@ class _MonthCell extends StatelessWidget {
   final DateTime? selectedDay;
   final VoidCallback onTap;
   final AppColors colors;
+  final AppSettings settings;
 
   const _MonthCell({
     required this.month,
@@ -51,6 +56,7 @@ class _MonthCell extends StatelessWidget {
     required this.selectedDay,
     required this.onTap,
     required this.colors,
+    required this.settings,
   });
 
   bool get _isCurrentMonth {
@@ -70,7 +76,7 @@ class _MonthCell extends StatelessWidget {
     if (_isTodayAndSelected) return colors.accentLightAccent;
     if (_isSelectedMonth) return colors.primaryColor;
     if (_isCurrentMonth) return colors.accentLight;
-    return AppColors.white;
+    return colors.secondaryColor;
   }
 
   Color get _borderColor {
@@ -98,6 +104,12 @@ class _MonthCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final workPercentage = app_date_utils.AppDateUtils.getWorkPercentageForMonth(
+      year,
+      month,
+      settings,
+    );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -106,17 +118,91 @@ class _MonthCell extends StatelessWidget {
           border: Border.all(color: _borderColor, width: _borderWidth),
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
         ),
-        child: Center(
-          child: Text(
-            AppDateUtils.getMonthName(month),
-            style: TextStyle(
-              fontSize: AppDimensions.bodyFontSize,
-              fontWeight: _fontWeight,
-              color: _textColor,
+        child: workPercentage >= 0
+            ? _buildShiftMonthCell(workPercentage)
+            : _buildRegularMonthCell(),
+      ),
+    );
+  }
+
+  Widget _buildRegularMonthCell() {
+    return Center(
+      child: Text(
+        app_date_utils.AppDateUtils.getMonthName(month),
+        style: TextStyle(
+          fontSize: AppDimensions.bodyFontSize,
+          fontWeight: _fontWeight,
+          color: _textColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShiftMonthCell(double workPercentage) {
+    return Stack(
+      children: [
+        // Фоновая закраска рабочих/выходных дней
+        Row(
+          children: [
+            if (workPercentage > 0)
+              Expanded(
+                flex: (workPercentage * 100).round(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppDimensions.cardRadius - 2),
+                      bottomLeft: Radius.circular(AppDimensions.cardRadius - 2),
+                      topRight: workPercentage >= 0.99
+                          ? Radius.circular(AppDimensions.cardRadius - 2)
+                          : Radius.zero,
+                      bottomRight: workPercentage >= 0.99
+                          ? Radius.circular(AppDimensions.cardRadius - 2)
+                          : Radius.zero,
+                    ),
+                  ),
+                ),
+              ),
+            if (workPercentage < 1.0)
+              Expanded(
+                flex: ((1 - workPercentage) * 100).round(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colors.accentLight,
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(AppDimensions.cardRadius - 2),
+                      bottomRight: Radius.circular(AppDimensions.cardRadius - 2),
+                      topLeft: workPercentage <= 0.01
+                          ? Radius.circular(AppDimensions.cardRadius - 2)
+                          : Radius.zero,
+                      bottomLeft: workPercentage <= 0.01
+                          ? Radius.circular(AppDimensions.cardRadius - 2)
+                          : Radius.zero,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // Текст сверху
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: _backgroundColor.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              app_date_utils.AppDateUtils.getMonthName(month),
+              style: TextStyle(
+                fontSize: AppDimensions.bodyFontSize,
+                fontWeight: _fontWeight,
+                color: _textColor,
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
