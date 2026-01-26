@@ -48,7 +48,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Expanded(
-            child: DaysCounterHeader(colors: _colors),
+            child: Stack(
+              children: [
+                DaysCounterHeader(colors: _colors),
+                Positioned(
+                  top: 40,
+                  right: 16,
+                  child: IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: _openSettings,
+                    iconSize: 28,
+                  ),
+                ),
+              ],
+            ),
           ),
           Expanded(child: _buildCalendarSection()),
         ],
@@ -97,17 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           if (!_isSelectedInCurrentMonth && _selectedDay != null)
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.centerRight,
               child: BackToTodayButton(onTap: _resetToToday),
             ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: _openSettings,
-              color: AppColors.black87,
-            ),
-          ),
         ],
       ),
     );

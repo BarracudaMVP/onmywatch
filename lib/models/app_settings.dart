@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 class AppSettings {
   final Color primaryColor;
-  final Color accentColor;
+  final Color secondaryColor;
 
   const AppSettings({
     required this.primaryColor,
-    required this.accentColor,
+    required this.secondaryColor,
   });
 
   // Настройки по умолчанию
   factory AppSettings.defaults() {
     return AppSettings(
       primaryColor: Colors.blue.shade600,
-      accentColor: Colors.red.shade600,
+      secondaryColor: Colors.white,
     );
   }
 
@@ -21,7 +21,7 @@ class AppSettings {
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
       primaryColor: Color(json['primaryColor'] ?? 0xFF1E88E5),
-      accentColor: Color(json['accentColor'] ?? 0xFFE53935),
+      secondaryColor: Color(json['secondaryColor'] ?? 0xFFFFFFFF),
     );
   }
 
@@ -29,18 +29,18 @@ class AppSettings {
   Map<String, dynamic> toJson() {
     return {
       'primaryColor': primaryColor.value,
-      'accentColor': accentColor.value,
+      'secondaryColor': secondaryColor.value,
     };
   }
 
   // Метод копирования с изменениями
   AppSettings copyWith({
     Color? primaryColor,
-    Color? accentColor,
+    Color? secondaryColor,
   }) {
     return AppSettings(
       primaryColor: primaryColor ?? this.primaryColor,
-      accentColor: accentColor ?? this.accentColor,
+      secondaryColor: secondaryColor ?? this.secondaryColor,
     );
   }
 }

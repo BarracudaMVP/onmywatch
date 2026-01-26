@@ -31,14 +31,21 @@ class AppTheme {
 
 class AppColors {
   final Color primaryColor;
-  final Color accentColor;
+  final Color secondaryColor;
 
   AppColors(AppSettings settings)
       : primaryColor = settings.primaryColor,
-        accentColor = settings.accentColor;
+        secondaryColor = settings.secondaryColor;
 
-  // Производные цвета
+  // Производные цвета от основного
   Color get primaryLight => Color.lerp(primaryColor, Colors.white, 0.7)!;
+  Color get primaryDark => Color.lerp(primaryColor, Colors.black, 0.2)!;
+  
+  // Производные цвета от второстепенного
+  Color get secondaryDark => Color.lerp(secondaryColor, Colors.black, 0.1)!;
+  
+  // Акцентный цвет (для "сегодня")
+  Color get accentColor => Colors.red.shade600;
   Color get accentLight => Color.lerp(accentColor, Colors.white, 0.85)!;
   Color get accentLightAccent => Color.lerp(accentColor, Colors.white, 0.7)!;
   Color get accentDark => Color.lerp(accentColor, Colors.black, 0.2)!;

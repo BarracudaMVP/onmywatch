@@ -18,7 +18,7 @@ class ModeToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colors.secondaryColor,
         borderRadius: BorderRadius.circular(AppDimensions.toggleButtonRadius),
         border: Border.all(color: AppColors.borderGrey, width: 1.5),
         boxShadow: const [

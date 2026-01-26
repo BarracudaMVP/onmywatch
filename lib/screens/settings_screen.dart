@@ -28,9 +28,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void _updateAccentColor(Color color) {
+  void _updateSecondaryColor(Color color) {
     setState(() {
-      _currentSettings = _currentSettings.copyWith(accentColor: color);
+      _currentSettings = _currentSettings.copyWith(secondaryColor: color);
     });
   }
 
@@ -64,15 +64,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ColorPickerSetting(
                 title: 'Основной цвет',
-                subtitle: 'Цвет интерфейса приложения',
+                subtitle: 'Цвет верхней панели и элементов интерфейса',
                 currentColor: _currentSettings.primaryColor,
                 onColorChanged: _updatePrimaryColor,
               ),
               ColorPickerSetting(
-                title: 'Дополнительный цвет',
-                subtitle: 'Цвет акцентных элементов',
-                currentColor: _currentSettings.accentColor,
-                onColorChanged: _updateAccentColor,
+                title: 'Второстепенный цвет',
+                subtitle: 'Цвет фона элементов управления',
+                currentColor: _currentSettings.secondaryColor,
+                onColorChanged: _updateSecondaryColor,
               ),
             ],
           ),
