@@ -50,7 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: Stack(
               children: [
-                DaysCounterHeader(colors: _colors),
+                DaysCounterHeader(
+                  colors: _colors,
+                  settings: widget.settings,
+                ),
                 Positioned(
                   top: 40,
                   right: 16,
