@@ -104,7 +104,7 @@ class _MonthCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final workPercentage = app_date_utils.AppDateUtils.getWorkPercentageForMonth(
+    final workSegments = app_date_utils.AppDateUtils.getMonthWorkSegments(
       year,
       month,
       settings,
@@ -118,8 +118,8 @@ class _MonthCell extends StatelessWidget {
           border: Border.all(color: _borderColor, width: _borderWidth),
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
         ),
-        child: workPercentage != null
-            ? _buildShiftMonthCell(workPercentage)
+        child: workSegments != null
+            ? _buildShiftMonthCell(workSegments)
             : _buildRegularMonthCell(),
       ),
     );
@@ -138,51 +138,45 @@ class _MonthCell extends StatelessWidget {
     );
   }
 
-  Widget _buildShiftMonthCell(double workPercentage) {
+  Widget _buildShiftMonthCell(List<app_date_utils.MonthColorSegment> segments) {
     return Stack(
       children: [
-        // Фоновая закраска рабочих/выходных дней
+        // Фоновая закраска рабочих/выходных дней по сегментам
         Row(
-          children: [
-            if (workPercentage > 0)
-              Expanded(
-                flex: (workPercentage * 100).round(),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: settings.workdayTextColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(AppDimensions.cardRadius - 2),
-                      bottomLeft: Radius.circular(AppDimensions.cardRadius - 2),
-                      topRight: workPercentage >= 0.99
-                          ? Radius.circular(AppDimensions.cardRadius - 2)
-                          : Radius.zero,
-                      bottomRight: workPercentage >= 0.99
-                          ? Radius.circular(AppDimensions.cardRadius - 2)
-                          : Radius.zero,
-                    ),
+          children: segments.map((segment) {
+            final segmentWidth = segment.end - segment.start;
+            final flex = (segmentWidth * 100).round();
+
+            if (flex <= 0) return const SizedBox.shrink();
+
+            final isFirst = segment == segments.first;
+            final isLast = segment == segments.last;
+
+            return Expanded(
+              flex: flex,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: segment.isWork
+                      ? settings.workdayTextColor.withOpacity(0.2)
+                      : settings.weekendTextColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.only(
+                    topLeft: isFirst
+                        ? Radius.circular(AppDimensions.cardRadius - 2)
+                        : Radius.zero,
+                    bottomLeft: isFirst
+                        ? Radius.circular(AppDimensions.cardRadius - 2)
+                        : Radius.zero,
+                    topRight: isLast
+                        ? Radius.circular(AppDimensions.cardRadius - 2)
+                        : Radius.zero,
+                    bottomRight: isLast
+                        ? Radius.circular(AppDimensions.cardRadius - 2)
+                        : Radius.zero,
                   ),
                 ),
               ),
-            if (workPercentage < 1.0)
-              Expanded(
-                flex: ((1 - workPercentage) * 100).round(),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: settings.weekendTextColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(AppDimensions.cardRadius - 2),
-                      bottomRight: Radius.circular(AppDimensions.cardRadius - 2),
-                      topLeft: workPercentage <= 0.01
-                          ? Radius.circular(AppDimensions.cardRadius - 2)
-                          : Radius.zero,
-                      bottomLeft: workPercentage <= 0.01
-                          ? Radius.circular(AppDimensions.cardRadius - 2)
-                          : Radius.zero,
-                    ),
-                  ),
-                ),
-              ),
-          ],
+            );
+          }).toList(),
         ),
         // Текст сверху
         Center(

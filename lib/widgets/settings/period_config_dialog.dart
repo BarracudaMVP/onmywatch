@@ -26,29 +26,23 @@ class _PeriodConfigDialogState extends State<PeriodConfigDialog> {
   @override
   void initState() {
     super.initState();
-    
-    if (widget.isShiftByDays) {
-      _shiftDaysController = TextEditingController(
-        text: widget.settings.shiftDaysPeriod.toString(),
-      );
-    } else {
-      _workDaysController = TextEditingController(
-        text: widget.settings.workDays.toString(),
-      );
-      _restDaysController = TextEditingController(
-        text: widget.settings.restDays.toString(),
-      );
-    }
+
+    _workDaysController = TextEditingController(
+      text: widget.settings.workDays.toString(),
+    );
+    _restDaysController = TextEditingController(
+      text: widget.settings.restDays.toString(),
+    );
+    _shiftDaysController = TextEditingController(
+      text: widget.settings.shiftDaysPeriod.toString(),
+    );
   }
 
   @override
   void dispose() {
-    if (widget.isShiftByDays) {
-      _shiftDaysController.dispose();
-    } else {
-      _workDaysController.dispose();
-      _restDaysController.dispose();
-    }
+    _workDaysController.dispose();
+    _restDaysController.dispose();
+    _shiftDaysController.dispose();
     super.dispose();
   }
 
@@ -56,9 +50,7 @@ class _PeriodConfigDialogState extends State<PeriodConfigDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Настройка периода'),
-      content: widget.isShiftByDays
-          ? _buildShiftByDaysContent()
-          : _buildTwoTwoContent(),
+      content: _buildTwoTwoContent(),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -73,66 +65,51 @@ class _PeriodConfigDialogState extends State<PeriodConfigDialog> {
   }
 
   Widget _buildTwoTwoContent() {
+    final maxValue = widget.isShiftByDays ? 999 : 10;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: _workDaysController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Рабочие дни',
-            hintText: '0-10',
+            hintText: widget.isShiftByDays ? '1-999' : '0-10',
           ),
           keyboardType: TextInputType.number,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
-            _RangeTextInputFormatter(0, 10),
+            _RangeTextInputFormatter(widget.isShiftByDays ? 1 : 0, maxValue),
           ],
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _restDaysController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Выходные дни',
-            hintText: '0-10',
+            hintText: widget.isShiftByDays ? '1-999' : '0-10',
           ),
           keyboardType: TextInputType.number,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
-            _RangeTextInputFormatter(0, 10),
+            _RangeTextInputFormatter(widget.isShiftByDays ? 1 : 0, maxValue),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildShiftByDaysContent() {
-    return TextField(
-      controller: _shiftDaysController,
-      decoration: const InputDecoration(
-        labelText: 'Период в днях',
-        hintText: '11-999',
-      ),
-      keyboardType: TextInputType.number,
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        _RangeTextInputFormatter(11, 999),
-      ],
-    );
-  }
-
   void _save() {
+    final workDays = int.tryParse(_workDaysController.text) ?? 2;
+    final restDays = int.tryParse(_restDaysController.text) ?? 2;
+
     if (widget.isShiftByDays) {
-      final shiftDays = int.tryParse(_shiftDaysController.text) ?? 30;
-      if (shiftDays >= 11 && shiftDays <= 999) {
-        widget.onSave(0, 0, shiftDays);
+      if (workDays >= 1 && workDays <= 999 && restDays >= 1 && restDays <= 999) {
+        widget.onSave(workDays, restDays, 0);
         Navigator.pop(context);
       } else {
-        _showError('Период должен быть от 11 до 999 дней');
+        _showError('Дни должны быть от 1 до 999');
       }
     } else {
-      final workDays = int.tryParse(_workDaysController.text) ?? 2;
-      final restDays = int.tryParse(_restDaysController.text) ?? 2;
-      
       if (workDays >= 0 && workDays <= 10 && restDays >= 0 && restDays <= 10) {
         widget.onSave(workDays, restDays, 0);
         Navigator.pop(context);

@@ -26,7 +26,6 @@ class WorkScheduleSelector extends StatelessWidget {
         
         // Настройки для 5/2
         if (settings.workScheduleType == WorkScheduleType.fiveTwoSchedule) ...[
-          const Divider(height: 1),
           SwitchListTile(
             title: const Text('С государственными праздниками'),
             subtitle: const Text('Учитывать праздничные дни'),
@@ -41,19 +40,16 @@ class WorkScheduleSelector extends StatelessWidget {
         if (settings.workScheduleType == WorkScheduleType.twoTwoSchedule ||
             settings.workScheduleType == WorkScheduleType.shiftByDays ||
             settings.workScheduleType == WorkScheduleType.shiftByMonths) ...[
-          const Divider(height: 1),
           ListTile(
-            leading: Icon(Icons.calendar_today, color: settings.primaryColor),
             title: const Text('Дата начала рабочего периода'),
             subtitle: Text(_formatDate(settings.workPeriodStartDate)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            trailing: const Icon(Icons.calendar_today, size: 20),
             onTap: () => _selectStartDate(context),
           ),
         ],
         
         // Настройка периода для 2/2
         if (settings.workScheduleType == WorkScheduleType.twoTwoSchedule) ...[
-          const Divider(height: 1),
           ListTile(
             title: const Text('Настроить период'),
             subtitle: Text('Работа: ${settings.workDays} дн., Отдых: ${settings.restDays} дн.'),
@@ -64,10 +60,9 @@ class WorkScheduleSelector extends StatelessWidget {
         
         // Настройка периода для вахты по дням
         if (settings.workScheduleType == WorkScheduleType.shiftByDays) ...[
-          const Divider(height: 1),
           ListTile(
             title: const Text('Настроить период'),
-            subtitle: Text('Период: ${settings.shiftDaysPeriod} дней'),
+            subtitle: Text('Работа: ${settings.workDays} дн., Отдых: ${settings.restDays} дн.'),
             trailing: const Icon(Icons.edit, size: 20),
             onTap: () => _showPeriodConfigDialog(context, true),
           ),
@@ -75,7 +70,6 @@ class WorkScheduleSelector extends StatelessWidget {
         
         // Настройка периода для вахты по месяцам
         if (settings.workScheduleType == WorkScheduleType.shiftByMonths) ...[
-          const Divider(height: 1),
           ListTile(
             title: const Text('Период работы'),
             subtitle: Text('${settings.shiftMonthsPeriod} дней'),
@@ -95,8 +89,8 @@ class WorkScheduleSelector extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildScheduleOption(context, WorkScheduleType.fiveTwoSchedule, '5/2'),
-            _buildScheduleOption(context, WorkScheduleType.twoTwoSchedule, '2/2'),
+            _buildScheduleOption(context, WorkScheduleType.fiveTwoSchedule, 'Стандартный график'),
+            _buildScheduleOption(context, WorkScheduleType.twoTwoSchedule, 'Сменный график'),
             _buildScheduleOption(context, WorkScheduleType.shiftByDays, 'Вахтовый график по дням'),
             _buildScheduleOption(context, WorkScheduleType.shiftByMonths, 'Вахтовый график по месяцам'),
           ],
@@ -133,14 +127,10 @@ class WorkScheduleSelector extends StatelessWidget {
         settings: settings,
         isShiftByDays: isShiftByDays,
         onSave: (workDays, restDays, shiftDays) {
-          if (isShiftByDays) {
-            onSettingsChanged(settings.copyWith(shiftDaysPeriod: shiftDays));
-          } else {
-            onSettingsChanged(settings.copyWith(
-              workDays: workDays,
-              restDays: restDays,
-            ));
-          }
+          onSettingsChanged(settings.copyWith(
+            workDays: workDays,
+            restDays: restDays,
+          ));
         },
       ),
     );

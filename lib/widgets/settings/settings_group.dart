@@ -12,6 +12,17 @@ class SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Добавляем разделители между элементами
+    final childrenWithDividers = <Widget>[];
+    for (int i = 0; i < children.length; i++) {
+      childrenWithDividers.add(children[i]);
+      if (i < children.length - 1) {
+        childrenWithDividers.add(
+          Divider(height: 1, color: Colors.grey.shade300),
+        );
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -28,7 +39,7 @@ class SettingsGroup extends StatelessWidget {
         ),
         Container(
           color: Colors.white,
-          child: Column(children: children),
+          child: Column(children: childrenWithDividers),
         ),
       ],
     );

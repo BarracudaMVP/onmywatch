@@ -117,9 +117,9 @@ class AppSettings {
   String getScheduleDisplayName() {
     switch (workScheduleType) {
       case WorkScheduleType.fiveTwoSchedule:
-        return '5/2';
+        return 'Стандартный график';
       case WorkScheduleType.twoTwoSchedule:
-        return '2/2';
+        return 'Сменный график';
       case WorkScheduleType.shiftByDays:
         return 'Вахтовый график по дням';
       case WorkScheduleType.shiftByMonths:

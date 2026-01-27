@@ -6,7 +6,6 @@ import '../widgets/year_calendar_view.dart';
 import '../widgets/days_counter_header.dart';
 import '../widgets/calendar_navigation_header.dart';
 import '../config/app_theme.dart';
-import '../utils/date_utils.dart';
 import '../models/app_settings.dart';
 import 'settings_screen.dart';
 
@@ -38,9 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
   AppColors get _colors => AppColors(widget.settings);
 
   DateTime get _today => DateTime.now();
-  
-  bool get _isSelectedInCurrentMonth => 
-      AppDateUtils.isSelectedInCurrentMonth(_selectedDay, _today);
+
+  bool get _isFocusedInCurrentMonth {
+    final today = DateTime.now();
+    return _focusedDay.year == today.year && _focusedDay.month == today.month;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               colors: _colors,
             ),
           ),
-          if (!_isSelectedInCurrentMonth && _selectedDay != null)
+          if (!_isFocusedInCurrentMonth)
             Align(
               alignment: Alignment.centerRight,
               child: BackToTodayButton(onTap: _resetToToday),

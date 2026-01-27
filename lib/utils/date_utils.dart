@@ -1,6 +1,19 @@
 import 'package:intl/intl.dart';
 import '../models/app_settings.dart';
 
+/// Информация о сегменте закраски месяца
+class MonthColorSegment {
+  final double start; // 0.0 - 1.0
+  final double end; // 0.0 - 1.0
+  final bool isWork;
+
+  MonthColorSegment({
+    required this.start,
+    required this.end,
+    required this.isWork,
+  });
+}
+
 /// Утилиты для работы с датами и расчётами рабочих графиков
 class AppDateUtils {
   /// Проверяет, что две даты представляют один и тот же день
@@ -54,22 +67,38 @@ class AppDateUtils {
         final daysSinceStart = day.difference(settings.workPeriodStartDate!).inDays;
         if (daysSinceStart < 0) return false;
 
-        final cycle = settings.shiftDaysPeriod * 2;
+        final cycle = settings.workDays + settings.restDays;
         if (cycle <= 0) return false;
 
         final positionInCycle = daysSinceStart % cycle;
-        return positionInCycle < settings.shiftDaysPeriod;
+        return positionInCycle < settings.workDays;
 
       case WorkScheduleType.shiftByMonths:
         if (settings.workPeriodStartDate == null) return false;
-        final daysSinceStart = day.difference(settings.workPeriodStartDate!).inDays;
-        if (daysSinceStart < 0) return false;
 
-        final cycle = settings.shiftMonthsPeriod * 2;
-        if (cycle <= 0) return false;
+        final startDate = settings.workPeriodStartDate!;
+        final startDay = startDate.day;
 
-        final positionInCycle = daysSinceStart % cycle;
-        return positionInCycle < settings.shiftMonthsPeriod;
+        // Вычисляем количество полных периодов (месяцев), прошедших с начальной даты
+        // Период меняется в тот же день каждого месяца
+        int monthsPassed = (day.year - startDate.year) * 12 + (day.month - startDate.month);
+
+        // Если еще не дошли до дня смены периода в текущем месяце, уменьшаем счетчик
+        if (day.day < startDay) {
+          monthsPassed--;
+        }
+
+        if (monthsPassed < 0) return false;
+
+        // Вычисляем количество месяцев в одном периоде (30 дней ≈ 1 месяц)
+        final monthsInPeriod = (settings.shiftMonthsPeriod / 30).round();
+        if (monthsInPeriod <= 0) return false;
+
+        // Определяем позицию в полном цикле (работа + отдых)
+        final fullCycle = monthsInPeriod * 2;
+        final positionInCycle = monthsPassed % fullCycle;
+
+        return positionInCycle < monthsInPeriod;
     }
   }
 
@@ -97,6 +126,60 @@ class AppDateUtils {
 
     return workingDaysCount / daysInMonth;
   }
+
+  /// Возвращает сегменты закраски месяца для вахтовых графиков
+  ///
+  /// Каждый сегмент содержит начало и конец (0.0-1.0) и тип (работа/отдых)
+  /// Возвращает null для обычных графиков (5/2, 2/2)
+  static List<MonthColorSegment>? getMonthWorkSegments(
+      int year, int month, AppSettings settings) {
+    // Для обычных графиков не показываем сегменты
+    if (settings.workScheduleType == WorkScheduleType.fiveTwoSchedule ||
+        settings.workScheduleType == WorkScheduleType.twoTwoSchedule) {
+      return null;
+    }
+
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final segments = <MonthColorSegment>[];
+
+    // Находим все смены фазы в месяце
+    bool? currentPhase;
+    int segmentStart = 1;
+
+    for (int day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(year, month, day);
+      final isWork = isWorkingDay(date, settings);
+
+      if (currentPhase == null) {
+        // Первый день месяца
+        currentPhase = isWork;
+        segmentStart = day;
+      } else if (currentPhase != isWork) {
+        // Смена фазы
+        final segmentEnd = day - 1;
+        segments.add(MonthColorSegment(
+          start: (segmentStart - 1) / daysInMonth,
+          end: segmentEnd / daysInMonth,
+          isWork: currentPhase,
+        ));
+
+        currentPhase = isWork;
+        segmentStart = day;
+      }
+    }
+
+    // Добавляем последний сегмент
+    if (currentPhase != null) {
+      segments.add(MonthColorSegment(
+        start: (segmentStart - 1) / daysInMonth,
+        end: 1.0,
+        isWork: currentPhase,
+      ));
+    }
+
+    return segments.isEmpty ? null : segments;
+  }
+
   /// Рассчитывает количество дней до смены фазы (работа ↔ отдых)
   ///
   /// Для каждого графика работы определяет, сколько дней осталось
@@ -138,24 +221,64 @@ class AppDateUtils {
         }
 
       case WorkScheduleType.shiftByDays:
-        final cycle = settings.shiftDaysPeriod * 2;
+        final cycle = settings.workDays + settings.restDays;
         if (cycle <= 0) return 1;
         final pos = daysSinceStart % cycle;
-        if (pos < settings.shiftDaysPeriod) {
-          return settings.shiftDaysPeriod - pos;
+        if (pos < settings.workDays) {
+          return settings.workDays - pos;
         } else {
           return cycle - pos;
         }
 
       case WorkScheduleType.shiftByMonths:
-        final cycle = settings.shiftMonthsPeriod * 2;
-        if (cycle <= 0) return 1;
-        final pos = daysSinceStart % cycle;
-        if (pos < settings.shiftMonthsPeriod) {
-          return settings.shiftMonthsPeriod - pos;
-        } else {
-          return cycle - pos;
+        final startDate = start;
+        final startDay = startDate.day;
+
+        int monthsPassed = (today.year - startDate.year) * 12 + (today.month - startDate.month);
+        if (today.day < startDay) {
+          monthsPassed--;
         }
+
+        final monthsInPeriod = (settings.shiftMonthsPeriod / 30).round();
+        if (monthsInPeriod <= 0) return 1;
+
+        final fullCycle = monthsInPeriod * 2;
+        final positionInCycle = monthsPassed % fullCycle;
+
+        // Вычисляем дату следующей смены фазы
+        int monthsUntilNextChange;
+        if (positionInCycle < monthsInPeriod) {
+          // Сейчас работа, следующая смена через (monthsInPeriod - positionInCycle) месяцев
+          monthsUntilNextChange = monthsInPeriod - positionInCycle;
+        } else {
+          // Сейчас отдых, следующая смена через (fullCycle - positionInCycle) месяцев
+          monthsUntilNextChange = fullCycle - positionInCycle;
+        }
+
+        // Вычисляем дату следующей смены
+        DateTime nextChangeDate = DateTime(
+          today.year,
+          today.month + monthsUntilNextChange,
+          startDay,
+        );
+
+        // Если уже прошли день смены в текущем месяце, добавляем дни до следующего дня смены
+        if (today.day >= startDay) {
+          nextChangeDate = DateTime(
+            today.year,
+            today.month + monthsUntilNextChange,
+            startDay,
+          );
+        } else {
+          // Еще не дошли до дня смены в текущем месяце
+          nextChangeDate = DateTime(
+            today.year,
+            today.month,
+            startDay,
+          );
+        }
+
+        return nextChangeDate.difference(today).inDays;
     }
   }
 
@@ -179,16 +302,29 @@ class AppDateUtils {
         return pos < settings.workDays;
 
       case WorkScheduleType.shiftByDays:
-        final cycle = settings.shiftDaysPeriod * 2;
+        final cycle = settings.workDays + settings.restDays;
         if (cycle <= 0) return true;
         final pos = daysSinceStart % cycle;
-        return pos < settings.shiftDaysPeriod;
+        return pos < settings.workDays;
 
       case WorkScheduleType.shiftByMonths:
-        final cycle = settings.shiftMonthsPeriod * 2;
-        if (cycle <= 0) return true;
-        final pos = daysSinceStart % cycle;
-        return pos < settings.shiftMonthsPeriod;
+        final startDate = settings.workPeriodStartDate!;
+        final startDay = startDate.day;
+
+        int monthsPassed = (today.year - startDate.year) * 12 + (today.month - startDate.month);
+        if (today.day < startDay) {
+          monthsPassed--;
+        }
+
+        if (monthsPassed < 0) return false;
+
+        final monthsInPeriod = (settings.shiftMonthsPeriod / 30).round();
+        if (monthsInPeriod <= 0) return true;
+
+        final fullCycle = monthsInPeriod * 2;
+        final positionInCycle = monthsPassed % fullCycle;
+
+        return positionInCycle < monthsInPeriod;
     }
   }
 }
