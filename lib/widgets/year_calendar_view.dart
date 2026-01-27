@@ -118,7 +118,7 @@ class _MonthCell extends StatelessWidget {
           border: Border.all(color: _borderColor, width: _borderWidth),
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
         ),
-        child: workPercentage >= 0
+        child: workPercentage != null
             ? _buildShiftMonthCell(workPercentage)
             : _buildRegularMonthCell(),
       ),
