@@ -149,7 +149,7 @@ class _MonthCell extends StatelessWidget {
                 flex: (workPercentage * 100).round(),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: settings.workdayTextColor.withOpacity(0.2),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(AppDimensions.cardRadius - 2),
                       bottomLeft: Radius.circular(AppDimensions.cardRadius - 2),
@@ -168,7 +168,7 @@ class _MonthCell extends StatelessWidget {
                 flex: ((1 - workPercentage) * 100).round(),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: colors.accentLight,
+                    color: settings.weekendTextColor.withOpacity(0.2),
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(AppDimensions.cardRadius - 2),
                       bottomRight: Radius.circular(AppDimensions.cardRadius - 2),

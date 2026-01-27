@@ -10,7 +10,9 @@ enum WorkScheduleType {
 class AppSettings {
   final Color primaryColor;
   final Color secondaryColor;
-  
+  final Color workdayTextColor;
+  final Color weekendTextColor;
+
   // Настройки календаря
   final WorkScheduleType workScheduleType;
   final bool includePublicHolidays;
@@ -23,6 +25,8 @@ class AppSettings {
   const AppSettings({
     required this.primaryColor,
     required this.secondaryColor,
+    this.workdayTextColor = const Color(0xFF424242),
+    this.weekendTextColor = const Color(0xFFE53935),
     this.workScheduleType = WorkScheduleType.fiveTwoSchedule,
     this.includePublicHolidays = true,
     this.workDays = 2,
@@ -36,6 +40,8 @@ class AppSettings {
     return AppSettings(
       primaryColor: Colors.blue.shade600,
       secondaryColor: Colors.white,
+      workdayTextColor: const Color(0xFF424242),
+      weekendTextColor: const Color(0xFFE53935),
       workScheduleType: WorkScheduleType.fiveTwoSchedule,
       includePublicHolidays: true,
       workDays: 2,
@@ -50,6 +56,8 @@ class AppSettings {
     return AppSettings(
       primaryColor: Color(json['primaryColor'] ?? 0xFF1E88E5),
       secondaryColor: Color(json['secondaryColor'] ?? 0xFFFFFFFF),
+      workdayTextColor: Color(json['workdayTextColor'] ?? 0xFF424242),
+      weekendTextColor: Color(json['weekendTextColor'] ?? 0xFFE53935),
       workScheduleType: WorkScheduleType.values[json['workScheduleType'] ?? 0],
       includePublicHolidays: json['includePublicHolidays'] ?? true,
       workDays: json['workDays'] ?? 2,
@@ -66,6 +74,8 @@ class AppSettings {
     return {
       'primaryColor': primaryColor.value,
       'secondaryColor': secondaryColor.value,
+      'workdayTextColor': workdayTextColor.value,
+      'weekendTextColor': weekendTextColor.value,
       'workScheduleType': workScheduleType.index,
       'includePublicHolidays': includePublicHolidays,
       'workDays': workDays,
@@ -79,6 +89,8 @@ class AppSettings {
   AppSettings copyWith({
     Color? primaryColor,
     Color? secondaryColor,
+    Color? workdayTextColor,
+    Color? weekendTextColor,
     WorkScheduleType? workScheduleType,
     bool? includePublicHolidays,
     int? workDays,
@@ -90,6 +102,8 @@ class AppSettings {
     return AppSettings(
       primaryColor: primaryColor ?? this.primaryColor,
       secondaryColor: secondaryColor ?? this.secondaryColor,
+      workdayTextColor: workdayTextColor ?? this.workdayTextColor,
+      weekendTextColor: weekendTextColor ?? this.weekendTextColor,
       workScheduleType: workScheduleType ?? this.workScheduleType,
       includePublicHolidays: includePublicHolidays ?? this.includePublicHolidays,
       workDays: workDays ?? this.workDays,

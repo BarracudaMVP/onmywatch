@@ -34,6 +34,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  void _updateWorkdayTextColor(Color color) {
+    setState(() {
+      _currentSettings = _currentSettings.copyWith(workdayTextColor: color);
+    });
+  }
+
+  void _updateWeekendTextColor(Color color) {
+    setState(() {
+      _currentSettings = _currentSettings.copyWith(weekendTextColor: color);
+    });
+  }
+
   void _updateSettings(AppSettings settings) {
     setState(() {
       _currentSettings = settings;
@@ -88,6 +100,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: 'Цвет фона нижней половины экрана',
                     currentColor: _currentSettings.secondaryColor,
                     onColorChanged: _updateSecondaryColor,
+                  ),
+                  ColorPickerSetting(
+                    title: 'Цвет рабочих дней',
+                    currentColor: _currentSettings.workdayTextColor,
+                    onColorChanged: _updateWorkdayTextColor,
+                  ),
+                  ColorPickerSetting(
+                    title: 'Цвет выходных дней',
+                    currentColor: _currentSettings.weekendTextColor,
+                    onColorChanged: _updateWeekendTextColor,
                   ),
                 ],
               ),

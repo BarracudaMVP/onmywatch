@@ -54,18 +54,18 @@ class MonthCalendarView extends StatelessWidget {
           color: AppColors.white,
           fontWeight: FontWeight.bold,
         ),
-        defaultTextStyle: TextStyle(color: AppColors.black87),
-        weekendTextStyle: TextStyle(color: AppColors.black87),
+        defaultTextStyle: TextStyle(color: settings.workdayTextColor),
+        weekendTextStyle: TextStyle(color: settings.weekendTextColor),
         outsideTextStyle: TextStyle(color: AppColors.lightTextGrey),
       ),
       daysOfWeekStyle: DaysOfWeekStyle(
         weekdayStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          color: AppColors.black87,
+          color: settings.workdayTextColor,
         ),
         weekendStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          color: AppColors.black87,
+          color: settings.weekendTextColor,
         ),
       ),
       calendarBuilders: CalendarBuilders(
@@ -79,7 +79,7 @@ class MonthCalendarView extends StatelessWidget {
 
   Widget _buildDay(BuildContext context, DateTime day, bool isToday) {
     final isWorkDay = app_date_utils.AppDateUtils.isWorkingDay(day, settings);
-    
+
     return Center(
       child: Container(
         width: AppDimensions.calendarCellSize,
@@ -96,7 +96,7 @@ class MonthCalendarView extends StatelessWidget {
             style: TextStyle(
               color: isToday
                   ? AppColors.white
-                  : (isWorkDay ? Colors.grey.shade700 : colors.accentColor),
+                  : (isWorkDay ? settings.workdayTextColor : settings.weekendTextColor),
               fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
             ),
           ),
